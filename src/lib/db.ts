@@ -11,7 +11,9 @@ let db: PrismaClient;
 export function getDb(): PrismaClient {
   if (!db) {
     const adapter = new PrismaPg({
-      connectionString: config.databaseUrl,
+      // `sslmode=require` already means verify-full in pg today, but pg warns that it will mean
+      // something weaker in its next major version, so ask for verify-full explicitly
+      connectionString: config.databaseUrl?.replace(/sslmode=(prefer|require|verify-ca)\b/, "sslmode=verify-full"),
       max: 10,
       // Neon suspends idle databases; allow time for the first connection to wake it
       connectionTimeoutMillis: 15_000,
