@@ -54,10 +54,10 @@ export type VendorDetailDTO = {
   businessName: string;
   slug: string;
   description: string | null;
-  phone: string | null;
-  whatsapp: string | null;
-  address: string | null;
-  pincode: string | null;
+  yearsInBusiness: number | null;
+  instagram: string | null;
+  website: string | null;
+  portfolio: string[];
   profileImage: string | null;
   coverImage: string | null;
   rating: number;

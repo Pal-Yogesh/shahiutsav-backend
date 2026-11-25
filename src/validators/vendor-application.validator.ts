@@ -38,7 +38,7 @@ const httpsUrl = z
   .refine((v) => v.startsWith("https://"), "Use a secure link (https://)")
   .max(500);
 
-const serviceSchema = z.object({
+export const serviceSchema = z.object({
   categoryId: z.string().min(1, "Choose a category"),
   title: z.string().trim().min(3, "Give this service a name").max(120),
   description: optionalText(600),
@@ -85,4 +85,52 @@ export const adminListSchema = z.object({
   q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+// ─── Vendor dashboard (live listings) ────────────────────────────────
+
+// Applied instantly: day-to-day details customers see
+export const profileUpdateSchema = applicationDraftSchema
+  .pick({
+    contactName: true,
+    phone: true,
+    whatsapp: true,
+    address: true,
+    pincode: true,
+    yearsInBusiness: true,
+    description: true,
+    instagram: true,
+    website: true,
+    profileImage: true,
+    coverImage: true,
+    portfolio: true,
+  })
+  .strict();
+
+// Applied after admin review: identity fields
+export const changeRequestSchema = z
+  .object({
+    businessName: z.string().trim().min(2, "Enter your business name").max(100).optional(),
+    cityId: z.string().min(1).optional(),
+    gstNumber: applicationDraftSchema.shape.gstNumber,
+    reason: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
+// Written out (not serviceSchema.partial()) so priceType's default can't overwrite it on a price-only update
+export const serviceUpdateSchema = z
+  .object({
+    title: serviceSchema.shape.title.optional(),
+    description: serviceSchema.shape.description,
+    priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY"]).optional(),
+    price: serviceSchema.shape.price.optional(),
+    isActive: z.boolean().optional(),
+  })
+  .strict();
+
+export const listingSchema = z.object({ isActive: z.boolean() }).strict();
+
+export const reviewDecisionSchema = z.object({
+  action: z.enum(["approve", "reject"]),
+  note: z.string().trim().max(2000).optional(),
 });

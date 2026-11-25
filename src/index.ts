@@ -10,6 +10,7 @@ import cityRoutes from "./routes/city.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import vendorApplicationRoutes from "./routes/vendor-application.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import vendorPortalRoutes from "./routes/vendor-portal.routes.js";
 import { errorHandler } from "./helpers/http-error.js";
 
 const app = express();
@@ -29,6 +30,7 @@ app.use("/api/cities", cityRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/vendor-application", vendorApplicationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/vendor-portal", vendorPortalRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => {

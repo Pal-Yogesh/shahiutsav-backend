@@ -71,6 +71,11 @@ export async function transition({
       );
     }
 
+    // The services submitted with the application go live with it
+    if (action === "approve") {
+      await tx.service.updateMany({ where: { vendorId, status: "PENDING", archivedAt: null }, data: { status: "LIVE" } });
+    }
+
     // Approval grants the vendor role; never downgrade an admin who is also a vendor
     if (rule.to === "APPROVED" && current.user.role === "customer") {
       await tx.user.update({ where: { id: current.userId }, data: { role: "vendor" } });

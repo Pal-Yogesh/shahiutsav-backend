@@ -1,57 +1,54 @@
 import { Router } from "express";
-import { createBooking, getBookingsByCustomer } from "../services/booking.service.js";
-import { createBookingSchema } from "../validators/booking.validator.js";
-import { searchParamsSchema } from "../validators/search.validator.js";
-import { sendSuccess, sendError, paginationMeta } from "../helpers/api-response.js";
 import { requireAuth, getSession } from "../middleware/auth.middleware.js";
-import { HttpError } from "../helpers/http-error.js";
+import { sendSuccess } from "../helpers/api-response.js";
+import { parseInput } from "../helpers/http-error.js";
+import { bookingListSchema, cancelSchema, createBookingSchema, reviewSchema } from "../validators/booking.validator.js";
+import {
+  cancelItems,
+  createBooking,
+  getCustomerBooking,
+  listCustomerBookings,
+  listOpenEvents,
+  reviewItem,
+} from "../services/booking.service.js";
 
+// The signed-in customer's bookings
 const router = Router();
+router.use(requireAuth);
+const uid = (req: Parameters<typeof getSession>[0]) => getSession(req)!.user.id;
 
-// GET /api/bookings — list customer bookings (auth required)
-router.get("/", requireAuth, async (req, res) => {
-  try {
-    const session = getSession(req);
-    const parsed = searchParamsSchema.safeParse({
-      page: req.query.page,
-      limit: req.query.limit,
-    });
-    if (!parsed.success) {
-      return sendError(res, "Invalid parameters");
-    }
-
-    const { data, total } = await getBookingsByCustomer(
-      session!.user.id,
-      parsed.data.page,
-      parsed.data.limit
-    );
-    const meta = paginationMeta(parsed.data.page, parsed.data.limit, total);
-
-    return sendSuccess(res, data, meta);
-  } catch {
-    return sendError(res, "Failed to fetch bookings", 500);
-  }
+// GET /api/bookings?scope=upcoming|past|cancelled
+router.get("/", async (req, res) => {
+  const { scope } = parseInput(bookingListSchema, req.query, "Invalid filter");
+  sendSuccess(res, await listCustomerBookings(uid(req), scope));
 });
 
-// POST /api/bookings — create booking (auth required)
-router.post("/", requireAuth, async (req, res) => {
-  try {
-    const session = getSession(req);
-    const parsed = createBookingSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return sendError(res, "Invalid booking data");
-    }
+// GET /api/bookings/open-events → events that can take more vendors
+router.get("/open-events", async (req, res) => {
+  sendSuccess(res, await listOpenEvents(uid(req)));
+});
 
-    const booking = await createBooking({
-      customerId: session!.user.id,
-      ...parsed.data,
-    });
+router.get("/:id", async (req, res) => {
+  sendSuccess(res, await getCustomerBooking(uid(req), req.params.id));
+});
 
-    return sendSuccess(res, booking, undefined, 201);
-  } catch (err) {
-    if (err instanceof HttpError) return sendError(res, err.message, err.status);
-    return sendError(res, "Failed to create booking", 500);
-  }
+// POST /api/bookings → request services (new event, or { bookingId } to add to one)
+router.post("/", async (req, res) => {
+  sendSuccess(res, await createBooking(uid(req), parseInput(createBookingSchema, req.body)), undefined, 201);
+});
+
+// Cancel the whole booking, or one vendor's part of it
+router.post("/:id/cancel", async (req, res) => {
+  const { reason } = parseInput(cancelSchema, req.body ?? {});
+  sendSuccess(res, await cancelItems(uid(req), req.params.id, null, reason));
+});
+router.post("/:id/items/:itemId/cancel", async (req, res) => {
+  const { reason } = parseInput(cancelSchema, req.body ?? {});
+  sendSuccess(res, await cancelItems(uid(req), req.params.id, req.params.itemId, reason));
+});
+
+router.post("/:id/items/:itemId/review", async (req, res) => {
+  sendSuccess(res, await reviewItem(uid(req), req.params.id, req.params.itemId, parseInput(reviewSchema, req.body)), undefined, 201);
 });
 
 export default router;

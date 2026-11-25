@@ -73,9 +73,16 @@ export async function getApplication(id: string) {
       user: { select: { id: true, name: true, email: true, emailVerified: true, createdAt: true } },
       city: { select: { id: true, name: true, slug: true, state: true } },
       services: {
+        where: { archivedAt: null },
         orderBy: { createdAt: "asc" },
-        select: { id: true, title: true, description: true, priceType: true, price: true, category: { select: { name: true, slug: true } } },
+        select: { id: true, title: true, description: true, priceType: true, price: true, status: true, isActive: true, category: { select: { name: true, slug: true } } },
       },
+      activities: {
+        orderBy: { createdAt: "desc" },
+        take: 30,
+        select: { id: true, type: true, summary: true, createdAt: true, actor: { select: { name: true, role: true } } },
+      },
+      changeRequests: { where: { status: "PENDING" }, select: { id: true, changes: true, createdAt: true } },
       events: {
         orderBy: { createdAt: "desc" },
         select: { id: true, fromStatus: true, toStatus: true, note: true, createdAt: true, actor: { select: { name: true, role: true } } },

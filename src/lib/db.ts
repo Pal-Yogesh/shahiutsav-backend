@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.js";
 import { config } from "../config/index.js";
+import { createDbSocket, dnsFallbackEnabled } from "./db-dns.js";
 
 // A long-running Express server talks to Postgres over a regular TCP pool.
 // (The Neon serverless/WebSocket driver is meant for edge functions; on a
@@ -15,6 +16,8 @@ export function getDb(): PrismaClient {
       // Neon suspends idle databases; allow time for the first connection to wake it
       connectionTimeoutMillis: 15_000,
       idleTimeoutMillis: 30_000,
+      // Falls back to public DNS if the local resolver can't find the database (dev only)
+      ...(dnsFallbackEnabled ? { stream: createDbSocket } : {}),
     });
     db = new PrismaClient({ adapter });
   }

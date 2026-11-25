@@ -2,6 +2,7 @@ import { getDb } from "../lib/db.js";
 import type { Prisma } from "../generated/prisma/client.js";
 import type { VendorCardDTO, VendorDetailDTO } from "../types/index.js";
 import type { SearchParamsInput } from "../validators/search.validator.js";
+import { LIVE_SERVICE, PUBLIC_VENDOR } from "./listing-rules.js";
 
 function buildSortOrder(sort: string): Prisma.VendorProfileOrderByWithRelationInput {
   switch (sort) {
@@ -23,26 +24,25 @@ export async function searchVendors(params: SearchParamsInput) {
   const { q, city, category, page, limit, sort } = params;
   const skip = (page - 1) * limit;
 
-  // Only approved, active vendors are public
-  const where: Prisma.VendorProfileWhereInput = { status: "APPROVED", isActive: true };
+  const filters: Prisma.VendorProfileWhereInput[] = [PUBLIC_VENDOR];
 
   if (q) {
-    where.OR = [
+    filters.push({ OR: [
       { businessName: { contains: q, mode: "insensitive" } },
       { description: { contains: q, mode: "insensitive" } },
-      { services: { some: { title: { contains: q, mode: "insensitive" } } } },
-    ];
+      { services: { some: { ...LIVE_SERVICE, title: { contains: q, mode: "insensitive" } } } },
+    ] });
   }
 
   if (city) {
-    where.city = { slug: city };
+    filters.push({ city: { slug: city } });
   }
 
   if (category) {
-    where.services = {
-      some: { category: { slug: category }, isActive: true },
-    };
+    filters.push({ services: { some: { ...LIVE_SERVICE, category: { slug: category } } } });
   }
+
+  const where: Prisma.VendorProfileWhereInput = { AND: filters };
 
   const [vendors, total] = await Promise.all([
     db.vendorProfile.findMany({
@@ -62,7 +62,7 @@ export async function searchVendors(params: SearchParamsInput) {
         isVerified: true,
         city: { select: { id: true, name: true, slug: true, state: true } },
         services: {
-          where: { isActive: true },
+          where: LIVE_SERVICE,
           select: {
             price: true,
             category: { select: { name: true } },
@@ -95,16 +95,17 @@ export async function searchVendors(params: SearchParamsInput) {
 export async function getVendorBySlug(slug: string): Promise<VendorDetailDTO | null> {
   const db = getDb();
   const vendor = await db.vendorProfile.findUnique({
-    where: { slug, status: "APPROVED", isActive: true },
+    where: { slug, ...PUBLIC_VENDOR },
     select: {
       id: true,
       businessName: true,
       slug: true,
       description: true,
-      phone: true,
-      whatsapp: true,
-      address: true,
-      pincode: true,
+      // Phone, WhatsApp and address are shared with a customer only after the vendor accepts their booking
+      yearsInBusiness: true,
+      instagram: true,
+      website: true,
+      portfolio: true,
       profileImage: true,
       coverImage: true,
       rating: true,
@@ -113,7 +114,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetailDTO | n
       isVerified: true,
       city: { select: { id: true, name: true, slug: true, state: true } },
       services: {
-        where: { isActive: true },
+        where: LIVE_SERVICE,
         select: {
           id: true,
           title: true,
@@ -155,7 +156,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetailDTO | n
 export async function getFeaturedVendors(limit = 8): Promise<VendorCardDTO[]> {
   const db = getDb();
   const vendors = await db.vendorProfile.findMany({
-    where: { status: "APPROVED", isActive: true },
+    where: PUBLIC_VENDOR,
     take: limit,
     orderBy: [{ rating: "desc" }, { totalBookings: "desc" }],
     select: {
@@ -170,7 +171,7 @@ export async function getFeaturedVendors(limit = 8): Promise<VendorCardDTO[]> {
       isVerified: true,
       city: { select: { id: true, name: true, slug: true, state: true } },
       services: {
-        where: { isActive: true },
+        where: LIVE_SERVICE,
         select: {
           price: true,
           category: { select: { name: true } },
