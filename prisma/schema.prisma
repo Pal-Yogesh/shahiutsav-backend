@@ -243,6 +243,7 @@ enum PriceType {
   STARTING_FROM
   PER_HOUR
   PER_DAY
+  PER_PLATE // banquet halls and caterers
 }
 
 // A service in a category the vendor isn't yet approved for waits for review.

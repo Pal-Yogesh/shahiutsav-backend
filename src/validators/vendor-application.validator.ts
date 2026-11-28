@@ -42,7 +42,7 @@ export const serviceSchema = z.object({
   categoryId: z.string().min(1, "Choose a category"),
   title: z.string().trim().min(3, "Give this service a name").max(120),
   description: optionalText(600),
-  priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY"]).default("STARTING_FROM"),
+  priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY", "PER_PLATE"]).default("STARTING_FROM"),
   price: z.coerce
     .number({ error: "Enter a price" })
     .int("Use whole rupees")
@@ -122,7 +122,7 @@ export const serviceUpdateSchema = z
   .object({
     title: serviceSchema.shape.title.optional(),
     description: serviceSchema.shape.description,
-    priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY"]).optional(),
+    priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY", "PER_PLATE"]).optional(),
     price: serviceSchema.shape.price.optional(),
     isActive: z.boolean().optional(),
   })

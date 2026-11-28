@@ -10,6 +10,7 @@ const categories = [
   { name: "Sound & Audio", slug: "sound-audio", icon: "Speaker", image: img("1524368535928-5b5e00ddc76b"), description: "Line arrays, subwoofers, mixers and wireless mics", sortOrder: 5 },
   { name: "Lighting & LED", slug: "lighting-led", icon: "Lightbulb", image: img("1459749411175-04bf5292ceea"), description: "Moving heads, LED walls, lasers and stage lighting", sortOrder: 6 },
   { name: "Stage, Tents & Furniture", slug: "stage-furniture", icon: "Tent", image: img("1464366400600-7168b8af9bc3"), description: "Stages, dance floors, tents, seating and tables", sortOrder: 7 },
+  { name: "Banquet Halls", slug: "banquet-halls", icon: "Landmark", image: img("1519167758481-83f550bb49b3"), description: "Banquet halls, marriage gardens, lawns and party venues", sortOrder: 8 },
   // { name: "Artists & Performers", slug: "artists-performers", icon: "Mic2", image: img("1598387993441-a364f854c3e1"), description: "Anchors, singers, dancers and celebrity acts", sortOrder: 8 },
   // { name: "Hospitality & Staff", slug: "event-staff", icon: "Users", image: img("1514933651103-005eec06c04b"), description: "Bartenders, waiters, valets and event crew", sortOrder: 9 },
 ];

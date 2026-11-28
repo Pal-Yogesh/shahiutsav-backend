@@ -17,7 +17,7 @@ export const createServiceSchema = z.object({
   categoryId: z.string().min(1),
   title: z.string().min(2).max(200),
   description: z.string().max(2000).optional(),
-  priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY"]).default("FIXED"),
+  priceType: z.enum(["FIXED", "STARTING_FROM", "PER_HOUR", "PER_DAY", "PER_PLATE"]).default("FIXED"),
   price: z.number().positive(),
   priceUnit: z.string().max(50).optional(),
   images: z.array(z.string().url()).max(10).default([]),

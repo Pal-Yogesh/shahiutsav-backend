@@ -12,6 +12,7 @@ export const PRICE_UNITS: Record<string, string> = {
   STARTING_FROM: "onwards",
   PER_HOUR: "per hour",
   PER_DAY: "per day",
+  PER_PLATE: "per plate",
 };
 
 const applicationInclude = {
